@@ -1,0 +1,25 @@
+#header {
+    color: rgb(240,240,240);
+    text-align: center;
+    padding-top: 35px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+#element-left {
+    color: rgb(240,240,240);
+    text-align: center;
+    padding-top: 25px;
+    margin-left: 40px
+}
+
+#element-right {
+    color: rgb(240,240,240);
+    text-align: center;
+    padding-top: 25px;
+    margin-right: 40px
+}
+
+#title {
+    padding: 5px;
+}
