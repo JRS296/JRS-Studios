@@ -717,6 +717,11 @@ input, select, textarea {
 
 /* List */
 
+	a.resume_download, a.resume_download:active, a.resume_download:hover
+	{
+		all: unset;
+	}
+
 	ol {
 		list-style: decimal;
 		margin: 0 0 2rem 0;
