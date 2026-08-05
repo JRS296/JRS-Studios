@@ -1044,6 +1044,18 @@ ul.icons li a:active {
 	background-color: rgba(2, 73, 15, 0.075);
 }
 
+ul.icons li a.has-img:before {
+	content: none;
+	display: none;
+}
+
+ul.icons li a.has-img img {
+	display: inline-block;
+	height: 1em;
+	width: 1em;
+	vertical-align: -0.125em;
+}
+
 /* Table */
 
 .table-wrapper {
