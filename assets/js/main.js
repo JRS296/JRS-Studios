@@ -342,6 +342,41 @@
 
 					}
 
+				// Research tab deep links.
+					else if (location.hash == '#research'
+					||	location.hash == '#research-publications'
+					||	location.hash == '#research-interests') {
+
+						event.preventDefault();
+						event.stopPropagation();
+
+						$main._show('research');
+						window.setResearchTab(
+							location.hash == '#research-interests' ? 'interests' : 'publications',
+							false
+						);
+
+					}
+
+				// Projects folder deep links.
+					else if (location.hash == '#projects'
+					||	location.hash.indexOf('#projects/') === 0) {
+
+						event.preventDefault();
+						event.stopPropagation();
+
+						if (!$('#projects').hasClass('active'))
+							$main._show('projects');
+
+						window.setProjectsView(
+							location.hash === '#projects'
+								? ''
+								: location.hash.replace(/^#projects\/?/, ''),
+							false
+						);
+
+					}
+
 				// Otherwise, check for a matching article.
 					else if ($main_articles.filter(location.hash).length > 0) {
 
@@ -389,7 +424,178 @@
 				if (location.hash != ''
 				&&	location.hash != '#')
 					$window.on('load', function() {
-						$main._show(location.hash.substr(1), true);
+						var id = location.hash.substr(1);
+
+						if (id == 'research'
+						||	id == 'research-publications'
+						||	id == 'research-interests') {
+							$main._show('research', true);
+							window.setResearchTab(id == 'research-interests' ? 'interests' : 'publications', false);
+						}
+						else if (id == 'projects'
+						||	id.indexOf('projects/') === 0) {
+							$main._show('projects', true);
+							window.setProjectsView(
+								id === 'projects' ? '' : id.replace(/^projects\/?/, ''),
+								false
+							);
+						}
+						else
+							$main._show(id, true);
 					});
+
+		// Copyright year.
+			var $copyright = $('#footer .copyright');
+			if ($copyright.length)
+				$copyright.text('\u00A9 ' + new Date().getFullYear() + ' JRS Studios');
+
+		// Research tabs.
+			window.setResearchTab = function(tabId, updateHash) {
+				var $tabs = $('[data-tabs]'),
+					$buttons = $tabs.find('[role="tab"]'),
+					$panels = $tabs.find('[data-panel]'),
+					$button = $buttons.filter('[data-tab="' + tabId + '"]');
+
+				if ($button.length == 0)
+					return;
+
+				$buttons
+					.removeClass('active')
+					.attr('aria-selected', 'false');
+
+				$button
+					.addClass('active')
+					.attr('aria-selected', 'true');
+
+				$panels
+					.removeClass('active')
+					.attr('hidden', true);
+
+				$panels
+					.filter('[data-panel="' + tabId + '"]')
+					.addClass('active')
+					.removeAttr('hidden');
+
+				if (updateHash) {
+					var nextHash = '#' + ($button.data('hash') || ('research-' + tabId));
+					if (location.hash != nextHash)
+						history.replaceState(null, '', nextHash);
+				}
+			};
+
+			$('[data-tabs]').each(function() {
+				var $tabs = $(this),
+					$buttons = $tabs.find('[role="tab"]');
+
+				$buttons.on('click', function(event) {
+					event.preventDefault();
+					window.setResearchTab($(this).data('tab'), true);
+				});
+			});
+
+		// Projects folder navigation.
+			var projectsLabels = {
+				'dijkstra': 'Dijkstra',
+				'auto-mp3': 'Auto-Mp3',
+				'chronicles': 'Chronicles',
+				'systems': 'Systems Software',
+				'vit': 'VIT Vellore',
+				'vit/nulakam': 'Nulakam',
+				'professional': 'Professional Training'
+			};
+
+			window.setProjectsView = function(path, updateHash) {
+				var $root = $('[data-projects-root]'),
+					$views = $root.children('[data-projects-view]'),
+					$crumb = $('[data-projects-breadcrumb]'),
+					normalized = (path || '').replace(/^\/+|\/+$/g, ''),
+					$target = $views.filter(function() {
+						return String($(this).attr('data-projects-view') || '') === normalized;
+					});
+
+				if ($target.length == 0) {
+					normalized = '';
+					$target = $views.filter(function() {
+						return String($(this).attr('data-projects-view') || '') === '';
+					});
+				}
+
+				$views.each(function() {
+					$(this).removeClass('active').prop('hidden', true);
+				});
+
+				$target.each(function() {
+					$(this).addClass('active').prop('hidden', false);
+				});
+
+				// Breadcrumb.
+					var html = '<a href="#projects" data-projects-path="">Projects</a>';
+
+					if (normalized) {
+						var parts = normalized.split('/'),
+							acc = [];
+
+						parts.forEach(function(part, index) {
+							acc.push(part);
+							var full = acc.join('/'),
+								label = projectsLabels[full] || part,
+								isLast = index === parts.length - 1;
+
+							html += '<span class="projects-breadcrumb__sep" aria-hidden="true">/</span>';
+
+							if (isLast)
+								html += '<span class="projects-breadcrumb__current">' + label + '</span>';
+							else
+								html += '<a href="#projects/' + full + '" data-projects-path="' + full + '">' + label + '</a>';
+						});
+					}
+
+					$crumb.html(html);
+
+				if (updateHash) {
+					var nextHash = normalized ? ('#projects/' + normalized) : '#projects';
+					if (location.hash != nextHash)
+						history.pushState(null, '', nextHash);
+				}
+
+				$window.triggerHandler('resize.flexbox-fix');
+			};
+
+			// Intercept folder / breadcrumb links so views switch even if hash plumbing stalls.
+			$(document).on('click', 'a[href^="#projects"]', function(event) {
+				var href = $(this).attr('href') || '';
+
+				if (href !== '#projects' && href.indexOf('#projects/') !== 0)
+					return;
+
+				event.preventDefault();
+
+				if (!$('#projects').hasClass('active'))
+					$main._show('projects');
+
+				window.setProjectsView(
+					href === '#projects' ? '' : href.replace(/^#projects\/?/, ''),
+					true
+				);
+			});
+
+			// Keep browser back/forward in sync with pushState updates.
+			$window.on('popstate', function() {
+				if (location.hash == '#projects'
+				||	location.hash.indexOf('#projects/') === 0) {
+					if (!$('#projects').hasClass('active'))
+						$main._show('projects');
+
+					window.setProjectsView(
+						location.hash === '#projects'
+							? ''
+							: location.hash.replace(/^#projects\/?/, ''),
+						false
+					);
+				}
+			});
+
+			// Default root view when Projects opens without a subpath.
+			window.setProjectsView('', false);
 
 })(jQuery);
