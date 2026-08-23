@@ -2404,6 +2404,11 @@ body.is-preload #footer {
 	border-color: rgba(255, 180, 150, 0.45);
 }
 
+.project-badge--ideation {
+	background: rgba(100, 140, 180, 0.25);
+	border-color: rgba(160, 200, 240, 0.45);
+}
+
 /* scrollbar */
 ::-webkit-scrollbar {
 	width: 5px;
